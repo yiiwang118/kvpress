@@ -1,0 +1,9 @@
+KVzap is a fast approximation of KVzip for compressing the KV cache.
+It predicts token importance from hidden states and prunes low-scoring KV pairs.
+This document provides background, a short summary, and a few key points.
+First, KV cache compression reduces memory footprint during long-context inference.
+Second, adaptive thresholds allow content-aware compression ratios.
+Third, a sliding window can protect recent tokens from eviction.
+In practice, the quality depends on the chosen threshold and the base model.
+The method can be used during prefilling and optionally during decoding.
+This paragraph exists only to make the context long enough to exercise compression.
