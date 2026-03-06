@@ -14,9 +14,11 @@ from kvpress.presses.composed_press import ComposedPress
 from kvpress.presses.criticalkv_press import CriticalAdaKVPress, CriticalKVPress
 from kvpress.presses.cur_press import CURPress
 from kvpress.presses.decoding_press import DecodingPress
+from kvpress.presses.dms_press import DMSPress
 from kvpress.presses.duo_attention_press import DuoAttentionPress
 from kvpress.presses.expected_attention_press import ExpectedAttentionPress
 from kvpress.presses.expected_attention_with_stats import ExpectedAttentionStatsPress
+from kvpress.presses.fastkvzip_press import FastKVzipPress
 from kvpress.presses.finch_press import FinchPress
 from kvpress.presses.key_rerotation_press import KeyRerotationPress
 from kvpress.presses.keydiff_press import KeyDiffPress
@@ -37,7 +39,6 @@ from kvpress.presses.simlayerkv_press import SimLayerKVPress
 from kvpress.presses.snapkv_press import SnapKVPress
 from kvpress.presses.streaming_llm_press import StreamingLLMPress
 from kvpress.presses.think_press import ThinKPress
-from kvpress.presses.threshold_press import ThresholdPress
 from kvpress.presses.tova_press import TOVAPress
 
 # Patch the attention functions to support head-wise compression
@@ -80,5 +81,6 @@ __all__ = [
     "LeverageScorePress",
     "NonCausalAttnPress",
     "KVzapPress",
-    "ThresholdPress",
+    "DMSPress",
+    "FastKVzipPress",
 ]

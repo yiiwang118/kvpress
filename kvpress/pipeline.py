@@ -13,10 +13,10 @@ from transformers.pipelines.base import GenericTensor
 
 from kvpress.presses.base_press import BasePress
 from kvpress.presses.decoding_press import DecodingPress
+from kvpress.presses.dms_press import DMSPress
 from kvpress.presses.finch_press import FinchPress
 from kvpress.presses.key_rerotation_press import KeyRerotationPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
-from kvpress.presses.threshold_press import ThresholdPress
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +224,7 @@ class KVPressTextGenerationPipeline(Pipeline):
 
         # We only perform decoding compression if the press is a decoding or prefill decoding press
         perform_decoding_compression = press is not None and isinstance(press, (DecodingPress, PrefillDecodingPress))
-        if isinstance(press, ThresholdPress):
+        if isinstance(press, DMSPress):
             perform_decoding_compression = press.decoding
         with press(self.model) if perform_decoding_compression else contextlib.nullcontext():
             # Greedy decoding for each question
@@ -311,7 +311,7 @@ class KVPressTextGenerationPipeline(Pipeline):
             generated_ids.append(new_id)
             if new_id.item() in should_stop_token_ids:
                 break
-        answer = self.tokenizer.decode(torch.stack(generated_ids), skip_special_tokens=True)
+        answer = str(self.tokenizer.decode(torch.stack(generated_ids), skip_special_tokens=True))
         return answer
 
     def postprocess(self, model_outputs, single_question):

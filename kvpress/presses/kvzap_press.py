@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass, field
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 import torch
 import torch.nn as nn
@@ -24,6 +24,7 @@ class KVzapModel(PreTrainedModel):
 
     def __init__(self, config):
         super().__init__(config)
+        self.all_tied_weights_keys = {}
         if config.hidden_dim is None:
             # Linear model
             self.layers = nn.ModuleList(
@@ -50,7 +51,7 @@ class KVzapPress(ScorerPress):
     KVzap (https://arxiv.org/abs/2601.07891) is a fast approximation of KVzip that works
     in both prefilling and decoding. It applies a lightweight surrogate model to the hidden
     states to predict importance scores for every KV pair.
-    KVzapPress is designed to be used in conjunction with the ThresholdPress
+    KVzapPress is designed to be used in conjunction with the DMSPress
     model_type can be "linear" or "mlp".
     """
 
@@ -72,8 +73,7 @@ class KVzapPress(ScorerPress):
         attentions: torch.Tensor,
         kwargs: dict,
     ) -> torch.Tensor:
-        module = self.kvzap_model.layers[module.layer_idx]
-        module = module.to(hidden_states.device, dtype=hidden_states.dtype).eval()
-        with torch.no_grad():
-            scores = module(hidden_states).transpose(1, 2)
+        kvzap_module = self.kvzap_model.layers[module.layer_idx]
+        kvzap_module = kvzap_module.to(hidden_states.device, dtype=hidden_states.dtype).eval()
+        scores = kvzap_module(hidden_states).transpose(1, 2)
         return scores

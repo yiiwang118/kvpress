@@ -1,37 +1,44 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-- `kvpress/` contains the library code; most compression methods live in `kvpress/presses/` and the pipeline in `kvpress/pipeline.py`.
-- `tests/` holds unit and integration tests, with press-specific tests under `tests/presses/`.
-- `evaluation/` provides benchmarking scripts and configs (see `evaluation/README.md`).
-- `kvzap/` contains training/eval utilities for KVzap.
-- `notebooks/` includes demos and experimentation notebooks.
-- `script/` hosts helper scripts such as `script/test-environment.sh`.
+## Project Overview
 
-## Build, Test, and Development Commands
-- `uv sync --all-groups` installs dev dependencies; use `uv sync --extra eval` for evaluation tooling.
-- `make format` runs `isort` and `black` to auto-format code.
-- `make style` runs `flake8`, `mypy`, and SPDX header checks; outputs logs in `reports/`.
-- `make test` runs the full pytest suite with coverage and fails on skipped tests.
-- Evaluation: `cd evaluation && python evaluate.py --dataset loogle --press_name expected_attention`.
+- `kvpress` is a Python library for KV cache compression using 🤗 transformers. Read `README.md` for full project context.
+- Philosophy: keep one place to compare many KV cache compression methods, make evaluation easy, and favor readability over raw speed.
+- Core package code lives in `kvpress/`.
+- Compression methods are implemented as "presses" in `kvpress/presses/`.
+- Evaluation tooling and benchmark datasets live in `evaluation/`.
+- Tests live in `tests/`.
 
-## Coding Style & Naming Conventions
-- Python formatting: `black` with line length 120; import ordering via `isort`.
-- Lint/type checks: `flake8` and `mypy` (see `pyproject.toml`).
-- Files should include SPDX headers (`SPDX-FileCopyrightText:`) or `make style` will fail.
-- Naming: presses follow `*_press.py` with classes like `MyPress`; add exports to `kvpress/presses/__init__.py`.
+## Environment Setup
 
-## Testing Guidelines
-- Tests use `pytest`; keep new tests under `tests/` and name files `test_*.py`.
-- Add coverage for new presses and behaviors, and include them in `tests/default_presses.py` when appropriate.
-- Run focused tests with `uv run pytest tests/test_generate.py` before full `make test`.
+- Package manager: `uv`. Install: `uv sync`. Activate: `source .venv/bin/activate`.
 
-## Commit & Pull Request Guidelines
-- Commit messages are short, imperative, and often include PR numbers, e.g., `Add KVzapPress (#171)`.
-- All commits must be signed off (`git commit -s`) per the DCO in `CONTRIBUTING.md`.
-- PRs should include a clear description, link issues, and follow `.github/PULL_REQUEST_TEMPLATE.md` (format, tests, SPDX headers).
-- For new presses, update README “Available presses” and add a test entry as noted in the PR checklist.
+## Key Entry Points
 
-## Security & Configuration Tips
-- Evaluation and some tests require optional deps (e.g., `flash-attn`, `optimum-quanto`); install via `uv` extras or follow `Makefile`.
-- Use `evaluation/evaluate_config.yaml` for reproducible benchmark settings.
+- `KVPressTextGenerationPipeline` in `kvpress/pipeline.py` is the primary user-facing API for applying a press during generation.
+- `kvpress/__init__.py`: lists all available presses.
+- All presses are `@dataclass` classes inheriting from `BasePress` (`kvpress/presses/base_press.py`), and many presses inherit from `ScorerPress` (`kvpress/presses/scorer_press.py`) for score-based pruning.
+- Read `BasePress` and `ScorerPress` implementations to understand the press architecture and hook mechanism.
+
+## Style
+
+- `make format` (isort + black), `make style` (flake8, mypy, SPDX header check).
+- All Python files **must** have SPDX headers:
+```python
+# SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+```
+
+## Adding or Modifying a Press
+
+1. Create `kvpress/presses/my_press.py` as a `@dataclass` inheriting from `BasePress` (or `ScorerPress` if the press is score-based).
+2. Export it in `kvpress/__init__.py` (add both the import and the `__all__` entry).
+3. Add tests in `tests/default_presses.py` (shared parametrized matrix) and/or `tests/presses/` (press-specific tests). Check existing examples to decide.
+4. If evaluation support is needed, add a pre-configured instance to `PRESS_REGISTRY` in `evaluation/evaluate_registry.py`.
+5. Update `README.md` with press description, link to paper, and source link.
+6. Run `make style` and test only new/modified tests.
+
+## Commits
+
+- Sign commits with DCO (`git commit -s`) as required by `CONTRIBUTING.md`.
+
